@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "Codeforces POTD Plus",
+    "version": "1.0.0",
+    "description": "Daily Codeforces problems tailored to your rating, with streak tracking and history.",
+    "action": {
+        "default_popup": "index.html",
+        "default_title": "Codeforces POTD Plus"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "https://codeforces.com/api/*"
+    ],
+    "background": {
+        "service_worker": "src/background.js",
+        "type": "module"
+    }
+}
