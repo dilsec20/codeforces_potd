@@ -38,20 +38,34 @@ export const usePotd = (handle, forceDate = null) => {
     useEffect(() => {
         chrome.storage.local.get(['streakData'], (result) => {
             if (result.streakData) {
-                setStreak(result.streakData.count || 0);
-                setMaxStreak(result.streakData.max || 0);
-                setSolvedHistory(result.streakData.history || []);
-                if (result.streakData.lastSolved === getDailyDateString()) {
+                let count = result.streakData.count || 0;
+                let max = result.streakData.max || 0;
+                let history = result.streakData.history || [];
+                let lastSolved = result.streakData.lastSolved;
+
+                // Self-healing: Ensure Max is never less than Current
+                // This handles cases where data might be inconsistent from old versions
+                if (count > max) {
+                    max = count;
+                    chrome.storage.local.set({
+                        streakData: { ...result.streakData, max: max }
+                    });
+                }
+
+                setStreak(count);
+                setMaxStreak(max);
+                setSolvedHistory(history);
+
+                if (lastSolved === getDailyDateString()) {
                     setSolvedToday(true);
                 }
-                const lastSolved = result.streakData.lastSolved;
+
                 const today = getDailyDateString();
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
                 const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
                 if (lastSolved && lastSolved !== today && lastSolved !== yesterday) {
                     // Only update visual streak if looking at today, or generally just load it
-                    // We don't want to reset it in storage just by looking at a past date
                 }
             }
         });
@@ -253,29 +267,27 @@ export const usePotd = (handle, forceDate = null) => {
                 history = result.streakData.history || [];
             }
 
-            if (lastSolved === today) {
-                if (!history.includes(today)) {
-                    history.push(today);
-                    chrome.storage.local.set({ streakData: { ...result.streakData, history } });
-                    setSolvedHistory(history);
+            // Only increment if we haven't solved it today yet
+            if (lastSolved !== today) {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
+
+                if (lastSolved === yesterday) {
+                    currentStreak += 1;
+                } else {
+                    currentStreak = 1;
                 }
-                return;
+                lastSolved = today;
             }
 
-            const d = new Date();
-            d.setDate(d.getDate() - 1);
-            const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
-
-            if (lastSolved === yesterday) {
-                currentStreak += 1;
-            } else {
-                currentStreak = 1;
-            }
-
+            // Always update max streak if current exceeds it
+            // This fixes the issue where max might be 0 while current is 1 (e.g. from legacy data)
             if (currentStreak > currentMax) {
                 currentMax = currentStreak;
             }
 
+            // Always ensure history is up to date
             if (!history.includes(today)) {
                 history.push(today);
             }
