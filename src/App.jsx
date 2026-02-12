@@ -7,7 +7,7 @@ function App() {
   const [handle, setHandle] = useState('');
   const [inputHandle, setInputHandle] = useState('');
   const [activeTab, setActiveTab] = useState('global');
-  const { globalPotd, personalPotd, loading, error, streak, maxStreak, solvedToday, solvedHistory } = usePotd(handle);
+  const { globalPotd, personalPotd, loading, error, streak, maxStreak, solvedToday, globalSolved, solvedHistory } = usePotd(handle);
 
   useEffect(() => {
     chrome.storage.local.get(['handle'], (result) => {
@@ -103,20 +103,28 @@ function App() {
               <button
                 onClick={() => setActiveTab('global')}
                 className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === 'global'
-                    ? 'bg-slate-700 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-700 shadow-sm'
+                    : 'text-slate-400 hover:bg-slate-700/30'
+                  } ${globalSolved
+                    ? 'text-green-400'
+                    : (activeTab === 'global' ? 'text-white' : '')
                   }`}
               >
-                <Globe size={12} /> Global
+                <Globe size={12} className={globalSolved ? 'text-green-400' : ''} />
+                Global {globalSolved && '✓'}
               </button>
               <button
                 onClick={() => setActiveTab('personal')}
                 className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === 'personal'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 shadow-sm'
+                    : 'text-slate-400 hover:bg-slate-700/30'
+                  } ${solvedToday
+                    ? 'text-green-300 font-bold'
+                    : (activeTab === 'personal' ? 'text-white' : '')
                   }`}
               >
-                <User size={12} /> For You
+                <User size={12} className={solvedToday ? 'text-green-300' : ''} />
+                For You {solvedToday && '✓'}
               </button>
             </div>
 

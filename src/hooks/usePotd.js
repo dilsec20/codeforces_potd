@@ -17,10 +17,13 @@ export const usePotd = (handle) => {
     const [personalPotd, setPersonalPotd] = useState(null);
     const [streak, setStreak] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
-    const [solvedToday, setSolvedToday] = useState(false);
+    const [solvedToday, setSolvedToday] = useState(false); // Personal solved status (for streak)
+    const [globalSolved, setGlobalSolved] = useState(false); // Global solved status
     const [solvedHistory, setSolvedHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // ... (rest of useEffect for loading problems remains largely same, just calling checkStatus differently at end)
 
     // Load streak from storage on mount
     useEffect(() => {
@@ -29,26 +32,16 @@ export const usePotd = (handle) => {
                 setStreak(result.streakData.count || 0);
                 setMaxStreak(result.streakData.max || 0);
                 setSolvedHistory(result.streakData.history || []);
-
-                // Check if last solved date was today
                 if (result.streakData.lastSolved === getDailyDateString()) {
                     setSolvedToday(true);
                 }
-
-                // Check if streak is broken (last solved was before yesterday)
-                // NOTE: We only reset visualization here. Actual reset happens on updateStreak or next solve.
-                // But wait, if user opens extension and sees "Streak: 5", but last solve was 2 days ago, 
-                // it should probably say "Streak: 0" (or pending reset).
-                // Let's check logic:
                 const lastSolved = result.streakData.lastSolved;
                 const today = getDailyDateString();
-
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
                 const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
-
                 if (lastSolved && lastSolved !== today && lastSolved !== yesterday) {
-                    setStreak(0); // Visual reset if broken
+                    setStreak(0);
                 }
             }
         });
@@ -63,7 +56,6 @@ export const usePotd = (handle) => {
                 setLoading(true);
                 const today = getDailyDateString();
 
-                // 1. Check Storage First
                 const storage = await chrome.storage.local.get(['potdData']);
                 const cachedData = storage.potdData;
 
@@ -71,7 +63,6 @@ export const usePotd = (handle) => {
                 let loadedPersonal = null;
                 let needFetch = false;
 
-                // Validate Cached Global
                 if (cachedData && cachedData.date === today && cachedData.global) {
                     loadedGlobal = cachedData.global;
                     if (isMounted) setGlobalPotd(loadedGlobal);
@@ -79,7 +70,6 @@ export const usePotd = (handle) => {
                     needFetch = true;
                 }
 
-                // Validate Cached Personal
                 if (handle && cachedData && cachedData.date === today && cachedData.handle === handle && cachedData.personal) {
                     loadedPersonal = cachedData.personal;
                     if (isMounted) setPersonalPotd(loadedPersonal);
@@ -87,16 +77,13 @@ export const usePotd = (handle) => {
                     needFetch = true;
                 }
 
-                if (handle && loadedPersonal) {
-                    checkIfSolved(handle, loadedPersonal);
-                }
-
                 if (loadedGlobal && (!handle || loadedPersonal)) {
+                    // Check solved status if we have problems
+                    if (handle) checkStatus(handle, loadedGlobal, loadedPersonal);
                     if (isMounted) setLoading(false);
                     return;
                 }
 
-                // 2. Fetch from API if needed
                 if (needFetch) {
                     const response = await fetch(CF_API_URL);
                     const data = await response.json();
@@ -104,7 +91,6 @@ export const usePotd = (handle) => {
                     if (data.status !== "OK") throw new Error("Failed to fetch problems");
                     const problems = data.result.problems.filter(p => p.rating);
 
-                    // Global
                     if (!loadedGlobal) {
                         const globalCandidates = problems.filter(p => p.rating >= 800 && p.rating <= 2000);
                         const seed = parseInt(today);
@@ -113,7 +99,6 @@ export const usePotd = (handle) => {
                         if (isMounted) setGlobalPotd(loadedGlobal);
                     }
 
-                    // Personal
                     if (handle && !loadedPersonal) {
                         const userRes = await fetch(`https://codeforces.com/api/user.info?handles=${handle}`);
                         const userData = await userRes.json();
@@ -150,12 +135,9 @@ export const usePotd = (handle) => {
                                 loadedPersonal = loadedGlobal;
                             }
                             if (isMounted) setPersonalPotd(loadedPersonal);
-
-                            checkIfSolved(handle, loadedPersonal);
                         }
                     }
 
-                    // Save
                     chrome.storage.local.set({
                         potdData: {
                             date: today,
@@ -164,6 +146,8 @@ export const usePotd = (handle) => {
                             personal: loadedPersonal || (cachedData ? cachedData.personal : null)
                         }
                     });
+
+                    if (handle) checkStatus(handle, loadedGlobal, loadedPersonal);
                 }
 
             } catch (err) {
@@ -179,27 +163,41 @@ export const usePotd = (handle) => {
         return () => { isMounted = false; };
     }, [handle]);
 
-    const checkIfSolved = async (userHandle, problem) => {
-        if (!userHandle || !problem) return;
+    const checkStatus = async (userHandle, globalProb, personalProb) => {
+        if (!userHandle) return;
 
         try {
             const response = await fetch(`https://codeforces.com/api/user.status?handle=${userHandle}&from=1&count=50`);
             const data = await response.json();
 
             if (data.status === "OK") {
-                const isSolved = data.result.some(sub =>
-                    sub.problem.contestId === problem.contestId &&
-                    sub.problem.index === problem.index &&
-                    sub.verdict === "OK"
-                );
+                const submissions = data.result;
 
-                if (isSolved) {
-                    setSolvedToday(true);
-                    updateStreak();
+                // Check Global
+                if (globalProb) {
+                    const isGlobal = submissions.some(sub =>
+                        sub.problem.contestId === globalProb.contestId &&
+                        sub.problem.index === globalProb.index &&
+                        sub.verdict === "OK"
+                    );
+                    if (isGlobal) setGlobalSolved(true);
+                }
+
+                // Check Personal
+                if (personalProb) {
+                    const isPersonal = submissions.some(sub =>
+                        sub.problem.contestId === personalProb.contestId &&
+                        sub.problem.index === personalProb.index &&
+                        sub.verdict === "OK"
+                    );
+                    if (isPersonal) {
+                        setSolvedToday(true);
+                        updateStreak();
+                    }
                 }
             }
         } catch (err) {
-            console.error("Error checking solved status:", err);
+            console.error("Error checking status:", err);
         }
     };
 
@@ -220,7 +218,6 @@ export const usePotd = (handle) => {
             }
 
             if (lastSolved === today) {
-                // Idempotency: just return, visualization is handled
                 if (!history.includes(today)) {
                     history.push(today);
                     chrome.storage.local.set({ streakData: { ...result.streakData, history } });
@@ -236,11 +233,9 @@ export const usePotd = (handle) => {
             if (lastSolved === yesterday) {
                 currentStreak += 1;
             } else {
-                // Streak broken, reset to 1 (since we just solved it)
                 currentStreak = 1;
             }
 
-            // Update Max
             if (currentStreak > currentMax) {
                 currentMax = currentStreak;
             }
@@ -265,8 +260,8 @@ export const usePotd = (handle) => {
         error,
         streak,
         maxStreak,
-        solvedToday,
+        solvedToday, // Personal solved
+        globalSolved, // Global solved
         solvedHistory,
-        checkSolved: () => checkIfSolved(handle, personalPotd)
     };
 };
