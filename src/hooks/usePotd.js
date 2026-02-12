@@ -12,7 +12,14 @@ const getDailyDateString = () => {
     return `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
 };
 
-export const usePotd = (handle) => {
+// Helper to format any date object to our string format
+// Exporting so Calendar can use it too if needed, but for now internal is fine
+const formatDateString = (dateObj) => {
+    return `${dateObj.getFullYear()}${dateObj.getMonth() + 1}${dateObj.getDate()}`;
+};
+
+
+export const usePotd = (handle, forceDate = null) => {
     const [globalPotd, setGlobalPotd] = useState(null);
     const [personalPotd, setPersonalPotd] = useState(null);
     const [streak, setStreak] = useState(0);
@@ -23,7 +30,11 @@ export const usePotd = (handle) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Load streak from storage on mount
+    // Determine target date string
+    const targetDateStr = forceDate ? formatDateString(forceDate) : getDailyDateString();
+    const isToday = targetDateStr === getDailyDateString();
+
+    // Load streak from storage on mount (independent of selected date)
     useEffect(() => {
         chrome.storage.local.get(['streakData'], (result) => {
             if (result.streakData) {
@@ -39,7 +50,8 @@ export const usePotd = (handle) => {
                 d.setDate(d.getDate() - 1);
                 const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
                 if (lastSolved && lastSolved !== today && lastSolved !== yesterday) {
-                    setStreak(0);
+                    // Only update visual streak if looking at today, or generally just load it
+                    // We don't want to reset it in storage just by looking at a past date
                 }
             }
         });
@@ -48,37 +60,46 @@ export const usePotd = (handle) => {
 
     useEffect(() => {
         let isMounted = true;
+        setLoading(true);
+        setGlobalPotd(null);
+        setPersonalPotd(null);
+        setError(null);
 
         const loadProblems = async () => {
             try {
-                setLoading(true);
-                const today = getDailyDateString();
-
-                const storage = await chrome.storage.local.get(['potdData']);
-                const cachedData = storage.potdData;
-
+                // If checking today, check cache first
                 let loadedGlobal = null;
                 let loadedPersonal = null;
                 let needFetch = false;
 
-                if (cachedData && cachedData.date === today && cachedData.global) {
-                    loadedGlobal = cachedData.global;
-                    if (isMounted) setGlobalPotd(loadedGlobal);
-                } else {
-                    needFetch = true;
-                }
+                if (isToday) {
+                    const storage = await chrome.storage.local.get(['potdData']);
+                    const cachedData = storage.potdData;
 
-                if (handle && cachedData && cachedData.date === today && cachedData.handle === handle && cachedData.personal) {
-                    loadedPersonal = cachedData.personal;
-                    if (isMounted) setPersonalPotd(loadedPersonal);
-                } else if (handle) {
+                    if (cachedData && cachedData.date === targetDateStr && cachedData.global) {
+                        loadedGlobal = cachedData.global;
+                    } else {
+                        needFetch = true;
+                    }
+
+                    if (handle && cachedData && cachedData.date === targetDateStr && cachedData.handle === handle && cachedData.personal) {
+                        loadedPersonal = cachedData.personal;
+                    } else if (handle) {
+                        needFetch = true;
+                    }
+                } else {
+                    // Past date: always fetch/calculate (unless we want to cache history too? heavy)
+                    // For now, re-calculate
                     needFetch = true;
                 }
 
                 if (loadedGlobal && (!handle || loadedPersonal)) {
-                    // Check solved status if we have problems
-                    if (handle) checkStatus(handle, loadedGlobal, loadedPersonal);
-                    if (isMounted) setLoading(false);
+                    if (isMounted) {
+                        setGlobalPotd(loadedGlobal);
+                        if (loadedPersonal) setPersonalPotd(loadedPersonal);
+                        if (handle) checkStatus(handle, loadedGlobal, loadedPersonal);
+                        setLoading(false);
+                    }
                     return;
                 }
 
@@ -89,20 +110,21 @@ export const usePotd = (handle) => {
                     if (data.status !== "OK") throw new Error("Failed to fetch problems");
                     const problems = data.result.problems.filter(p => p.rating);
 
+                    // Global Selection (Deterministic based on targetDateStr)
                     if (!loadedGlobal) {
                         const globalCandidates = problems.filter(p => p.rating >= 800 && p.rating <= 2000);
-                        const seed = parseInt(today);
+                        const seed = parseInt(targetDateStr);
                         const globalIndex = Math.floor(seededRandom(seed) * globalCandidates.length);
                         loadedGlobal = globalCandidates[globalIndex];
                         if (isMounted) setGlobalPotd(loadedGlobal);
                     }
 
+                    // Personal Selection
                     if (handle && !loadedPersonal) {
                         const userRes = await fetch(`https://codeforces.com/api/user.info?handles=${handle}`);
                         const userData = await userRes.json();
 
                         if (userData.status === "OK") {
-                            // Default to 0 if unrated to trigger the < 1000 logic
                             const userRating = userData.result[0].rating || 0;
 
                             let minRating, maxRating;
@@ -130,7 +152,7 @@ export const usePotd = (handle) => {
                             );
 
                             if (personalCandidates.length > 0) {
-                                const seed = parseInt(today);
+                                const seed = parseInt(targetDateStr);
                                 let handleHash = 0;
                                 for (let i = 0; i < handle.length; i++) {
                                     handleHash = ((handleHash << 5) - handleHash) + handle.charCodeAt(i);
@@ -146,14 +168,17 @@ export const usePotd = (handle) => {
                         }
                     }
 
-                    chrome.storage.local.set({
-                        potdData: {
-                            date: today,
-                            handle: handle || (cachedData ? cachedData.handle : ''),
-                            global: loadedGlobal,
-                            personal: loadedPersonal || (cachedData ? cachedData.personal : null)
-                        }
-                    });
+                    // Only cache if it's today
+                    if (isToday) {
+                        chrome.storage.local.set({
+                            potdData: {
+                                date: targetDateStr,
+                                handle: handle,
+                                global: loadedGlobal,
+                                personal: loadedPersonal
+                            }
+                        });
+                    }
 
                     if (handle) checkStatus(handle, loadedGlobal, loadedPersonal);
                 }
@@ -169,38 +194,41 @@ export const usePotd = (handle) => {
         loadProblems();
 
         return () => { isMounted = false; };
-    }, [handle]);
+    }, [handle, targetDateStr]); // Depend on targetDateStr
 
     const checkStatus = async (userHandle, globalProb, personalProb) => {
         if (!userHandle) return;
 
         try {
+            // Re-check solved status (maybe efficient to cache this too?)
             const response = await fetch(`https://codeforces.com/api/user.status?handle=${userHandle}&from=1&count=50`);
             const data = await response.json();
 
             if (data.status === "OK") {
                 const submissions = data.result;
 
-                // Check Global
                 if (globalProb) {
                     const isGlobal = submissions.some(sub =>
                         sub.problem.contestId === globalProb.contestId &&
                         sub.problem.index === globalProb.index &&
                         sub.verdict === "OK"
                     );
-                    if (isGlobal) setGlobalSolved(true);
+                    setGlobalSolved(isGlobal);
                 }
 
-                // Check Personal
                 if (personalProb) {
                     const isPersonal = submissions.some(sub =>
                         sub.problem.contestId === personalProb.contestId &&
                         sub.problem.index === personalProb.index &&
                         sub.verdict === "OK"
                     );
-                    if (isPersonal) {
-                        setSolvedToday(true);
-                        updateStreak();
+
+                    // Only update solvedToday if it's actually today's problem
+                    if (targetDateStr === getDailyDateString()) {
+                        if (isPersonal && !solvedToday) {
+                            setSolvedToday(true);
+                            updateStreak();
+                        }
                     }
                 }
             }
@@ -268,8 +296,8 @@ export const usePotd = (handle) => {
         error,
         streak,
         maxStreak,
-        solvedToday, // Personal solved
-        globalSolved, // Global solved
+        solvedToday,
+        globalSolved,
         solvedHistory,
     };
 };

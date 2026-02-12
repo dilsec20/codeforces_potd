@@ -1,8 +1,9 @@
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useState } from 'react';
 
-const Calendar = ({ solvedHistory }) => {
-    const [currentDate, setCurrentDate] = useState(new Date());
+const Calendar = ({ solvedHistory, onDateSelect, selectedDate }) => {
+    // Initialize calendar view to the selected date's month
+    const [currentDate, setCurrentDate] = useState(selectedDate || new Date());
 
     const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -32,25 +33,36 @@ const Calendar = ({ solvedHistory }) => {
 
         // Days
         for (let d = 1; d <= totalDays; d++) {
+            const dateObj = new Date(year, month, d);
             const dateStr = `${year}${month + 1}${d}`;
             const isSolved = solvedHistory.includes(dateStr);
-            const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+            // Compare dates properly
+            const isSelected = selectedDate && selectedDate.toDateString() === dateObj.toDateString();
+            const isToday = new Date().toDateString() === dateObj.toDateString();
+
+            // Check if date is in future (disable click)
+            const isFuture = dateObj > new Date();
 
             days.push(
-                <div
+                <button
                     key={d}
-                    className={`h-6 w-6 flex items-center justify-center rounded-full text-[10px] font-medium relative cursor-default transition-colors
-                    ${isToday ? 'border border-blue-500' : ''}
-                    ${isSolved ? 'bg-green-600/20 text-green-400' : 'text-slate-500 hover:bg-slate-800'}
+                    onClick={() => !isFuture && onDateSelect && onDateSelect(dateObj)}
+                    disabled={isFuture}
+                    className={`h-6 w-6 flex items-center justify-center rounded-full text-[10px] font-medium relative transition-all group
+                    ${isSelected ? 'bg-blue-600 text-white ring-2 ring-blue-400 ring-offset-1 ring-offset-slate-900' : ''}
+                    ${!isSelected && isToday ? 'border border-blue-500 text-blue-200' : ''}
+                    ${!isSelected && !isToday ? (isSolved ? 'bg-green-900/30 text-green-400' : 'text-slate-500 hover:bg-slate-700') : ''}
+                    ${isFuture ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
                 `}
                 >
                     {d}
-                    {isSolved && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-green-900/40 rounded-full">
-                            <Check size={12} className="text-green-500" />
+                    {isSolved && !isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-green-900/20 rounded-full">
+                            <Check size={12} className="text-green-500/80" />
                         </div>
                     )}
-                </div>
+                </button>
             );
         }
         return days;

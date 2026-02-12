@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { usePotd } from './hooks/usePotd';
 import Calendar from './components/Calendar';
-import { Trophy, Globe, User, ExternalLink, Settings, Flame, Zap } from 'lucide-react';
+import { Trophy, Globe, User, ExternalLink, Settings, Flame, Zap, History, ChevronLeft } from 'lucide-react';
 
 function App() {
   const [handle, setHandle] = useState('');
   const [inputHandle, setInputHandle] = useState('');
   const [activeTab, setActiveTab] = useState('global');
-  const { globalPotd, personalPotd, loading, error, streak, maxStreak, solvedToday, globalSolved, solvedHistory } = usePotd(handle);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // New state for date selection
+
+  // Pass selectedDate to hook (it will default to today if null, but we manage state here)
+  const { globalPotd, personalPotd, loading, error, streak, maxStreak, solvedToday, globalSolved, solvedHistory } = usePotd(handle, selectedDate);
 
   useEffect(() => {
     chrome.storage.local.get(['handle'], (result) => {
@@ -21,14 +24,33 @@ function App() {
     });
   };
 
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    // Optional: switch to 'personal' tab if user clicks a date to see their history
+    if (activeTab === 'global') setActiveTab('personal');
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
   const ProblemCard = ({ problem, type }) => {
-    if (!problem) return <div className="text-gray-500 text-sm text-center py-4">Loading...</div>;
+    if (!problem) return <div className="text-gray-500 text-sm text-center py-4">Loading problem...</div>;
 
     const problemUrl = `https://codeforces.com/problemset/problem/${problem.contestId}/${problem.index}`;
 
     return (
-      <div className="p-3 bg-slate-800 rounded-lg shadow-sm border border-slate-700/50 animate-in fade-in duration-300">
-        <div className="flex justify-between items-center mb-1">
+      <div className="p-3 bg-slate-800 rounded-lg shadow-sm border border-slate-700/50 animate-in fade-in duration-300 relative overflow-hidden">
+        {/* Date Context Indicator */}
+        {!isToday && (
+          <div className="absolute top-0 right-0 bg-orange-500/20 text-orange-400 text-[10px] px-2 py-0.5 rounded-bl font-bold border-l border-b border-orange-500/30 flex items-center gap-1">
+            <History size={10} /> {selectedDate.toLocaleDateString()}
+          </div>
+        )}
+
+        <div className="flex justify-between items-center mb-1 pt-2">
           <h3 className="text-base font-bold text-white truncate max-w-[200px]">{problem.name}</h3>
           <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${problem.rating < 1200 ? 'bg-green-900/50 text-green-300 border border-green-800' :
               problem.rating < 1600 ? 'bg-blue-900/50 text-blue-300 border border-blue-800' :
@@ -54,13 +76,23 @@ function App() {
   };
 
   return (
-    <div className="w-[350px] bg-slate-900 text-white font-sans flex flex-col h-auto min-h-0">
+    <div className="w-[350px] bg-slate-900 text-white font-sans flex flex-col h-auto min-h-0 transition-height duration-300">
       {/* Header */}
       <header className="flex justify-between items-center px-4 py-3 bg-slate-800/30 border-b border-slate-700/30">
         <div className="flex items-center gap-2">
-          <Trophy className="text-yellow-500 w-4 h-4" />
+          {!isToday ? (
+            <button onClick={goToToday} className="mr-1 p-1 hover:bg-slate-800 rounded-full transition-colors group" title="Back to Today">
+              <ChevronLeft size={16} className="text-slate-400 group-hover:text-white" />
+            </button>
+          ) : (
+            <Trophy className="text-yellow-500 w-4 h-4" />
+          )}
           <h1 className="text-sm font-bold tracking-wide text-slate-200">
-            POTD<span className="text-blue-500">+</span>
+            {isToday ? (
+              <>POTD<span className="text-blue-500">+</span></>
+            ) : (
+              <span className="text-orange-400">Past Mode</span>
+            )}
           </h1>
         </div>
         <button className="text-slate-500 hover:text-white transition-colors">
@@ -118,7 +150,10 @@ function App() {
                 className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === 'personal'
                     ? 'bg-purple-600 shadow-sm'
                     : 'text-slate-400 hover:bg-slate-700/30'
-                  } ${solvedToday
+                  } ${solvedToday && isToday // Only show strict green tick for "TODAY's" goal being done? Or if past is solved? 
+                    // If globalSolved/solvedToday reflects the loaded problem (which is past date), then it's correct.
+                    // YES, usePotd checkStats updates based on loaded problem.
+                    // BUT 'solvedToday' variable name is slightly confusing now, it means 'solvedSelected'.
                     ? 'text-green-300 font-bold'
                     : (activeTab === 'personal' ? 'text-white' : '')
                   }`}
@@ -161,7 +196,9 @@ function App() {
                 </div>
               </div>
               <div className="bg-slate-800/30 p-2 rounded border border-slate-700/30 flex flex-col justify-center items-center">
-                <span className="text-slate-500 text-[10px] uppercase font-bold mb-1">Status</span>
+                <span className="text-slate-500 text-[10px] uppercase font-bold mb-1">
+                  {isToday ? 'Today Status' : 'Past Status'}
+                </span>
                 <span className={`text-sm font-bold ${solvedToday ? 'text-green-400' : 'text-slate-400'}`}>
                   {solvedToday ? 'Solved! 🎉' : 'Pending'}
                 </span>
@@ -170,7 +207,11 @@ function App() {
 
             {/* Calendar */}
             <div className="pt-1">
-              <Calendar solvedHistory={solvedHistory} />
+              <Calendar
+                solvedHistory={solvedHistory}
+                selectedDate={selectedDate}
+                onDateSelect={handleDateSelect}
+              />
             </div>
           </>
         )}
