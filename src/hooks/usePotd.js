@@ -23,8 +23,6 @@ export const usePotd = (handle) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ... (rest of useEffect for loading problems remains largely same, just calling checkStatus differently at end)
-
     // Load streak from storage on mount
     useEffect(() => {
         chrome.storage.local.get(['streakData'], (result) => {
@@ -104,7 +102,17 @@ export const usePotd = (handle) => {
                         const userData = await userRes.json();
 
                         if (userData.status === "OK") {
-                            const userRating = userData.result[0].rating || 1200;
+                            // Default to 0 if unrated to trigger the < 1000 logic
+                            const userRating = userData.result[0].rating || 0;
+
+                            let minRating, maxRating;
+                            if (userRating < 1000) {
+                                minRating = 800;
+                                maxRating = 1200;
+                            } else {
+                                minRating = userRating - 200;
+                                maxRating = userRating + 200;
+                            }
 
                             const subsRes = await fetch(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=500`);
                             const subsData = await subsRes.json();
@@ -116,8 +124,8 @@ export const usePotd = (handle) => {
                             }
 
                             const personalCandidates = problems.filter(p =>
-                                p.rating >= userRating - 200 &&
-                                p.rating <= userRating + 200 &&
+                                p.rating >= minRating &&
+                                p.rating <= maxRating &&
                                 !solvedSet.has(`${p.contestId}-${p.index}`)
                             );
 
