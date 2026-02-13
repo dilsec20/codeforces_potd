@@ -49,23 +49,6 @@ A Chrome extension that enhances your Codeforces daily practice with personalize
    npm run build
    ```
    
-## Database Setup (Optional) 🗄️
-
-To enable the leaderboard, run this SQL in your Supabase SQL Editor:
-
-```sql
-create table leaderboard (
-  handle text primary key,
-  max_streak int default 0,
-  last_updated timestamp with time zone default timezone('utc'::text, now())
-);
-
-alter table leaderboard enable row level security;
-
-create policy "Public read access" on leaderboard for select using (true);
-create policy "Public insert access" on leaderboard for insert with check (true);
-create policy "Public update access" on leaderboard for update using (true);
-```
 3. **Build the extension**:
    ```bash
    npm run build
