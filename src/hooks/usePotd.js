@@ -152,18 +152,46 @@ export const usePotd = (handle, forceDate = null) => {
 
                             const subsRes = await fetch(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=500`);
                             const subsData = await subsRes.json();
-                            const solvedSet = new Set();
+                            const solvedMap = new Map(); // Key: "ID-Index", Value: creationTimeSeconds
+
                             if (subsData.status === "OK") {
                                 subsData.result.forEach(sub => {
-                                    if (sub.verdict === "OK") solvedSet.add(`${sub.problem.contestId}-${sub.problem.index}`);
+                                    if (sub.verdict === "OK") {
+                                        const key = `${sub.problem.contestId}-${sub.problem.index}`;
+                                        // Store earliest solve time
+                                        if (!solvedMap.has(key) || sub.creationTimeSeconds < solvedMap.get(key)) {
+                                            solvedMap.set(key, sub.creationTimeSeconds);
+                                        }
+                                    }
                                 });
                             }
 
-                            const personalCandidates = problems.filter(p =>
-                                p.rating >= minRating &&
-                                p.rating <= maxRating &&
-                                !solvedSet.has(`${p.contestId}-${p.index}`)
-                            );
+                            // Calculate Target Date Timestamp (Start of Day)
+                            let targetTimestamp;
+                            if (forceDate) {
+                                const d = new Date(forceDate);
+                                d.setHours(0, 0, 0, 0);
+                                targetTimestamp = d.getTime() / 1000;
+                            } else {
+                                const d = new Date();
+                                d.setHours(0, 0, 0, 0);
+                                targetTimestamp = d.getTime() / 1000;
+                            }
+
+                            const personalCandidates = problems.filter(p => {
+                                const ratingOk = p.rating >= minRating && p.rating <= maxRating;
+                                if (!ratingOk) return false;
+
+                                const key = `${p.contestId}-${p.index}`;
+                                if (!solvedMap.has(key)) return true; // Not solved -> Include
+
+                                const solvedTime = solvedMap.get(key);
+                                // ONLY exclude if solved BEFORE the target day
+                                // This ensures that if you look at a past date, seeing the problem you solved ON that day (or later) remains deterministic.
+                                if (solvedTime < targetTimestamp) return false;
+
+                                return true;
+                            });
 
                             if (personalCandidates.length > 0) {
                                 const seed = parseInt(targetDateStr);
