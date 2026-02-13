@@ -77,6 +77,7 @@ export const usePotd = (handle, forceDate = null) => {
         setLoading(true);
         setGlobalPotd(null);
         setPersonalPotd(null);
+        setSolvedToday(false);
         setError(null);
 
         const loadProblems = async () => {
@@ -323,12 +324,15 @@ export const usePotd = (handle, forceDate = null) => {
                         sub.verdict === "OK"
                     );
 
-                    // Only update solvedToday if it's actually today's problem
-                    if (targetDateStr === getDailyDateString()) {
-                        if (isPersonal && !solvedToday) {
-                            setSolvedToday(true);
+                    if (isPersonal) {
+                        setSolvedToday(true);
+
+                        // Only increment streak if it's actually today's problem AND we just detected it
+                        if (targetDateStr === getDailyDateString() && !solvedToday) {
                             updateStreak();
                         }
+                    } else {
+                        setSolvedToday(false);
                     }
                 }
             }
@@ -336,6 +340,7 @@ export const usePotd = (handle, forceDate = null) => {
             console.error("Error checking status:", err);
         }
     };
+
 
     const updateStreak = () => {
         const today = getDailyDateString();
