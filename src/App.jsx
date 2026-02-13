@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { usePotd } from './hooks/usePotd';
 import Calendar from './components/Calendar';
-import { Trophy, Globe, User, ExternalLink, Settings, Flame, Zap, History, ChevronLeft } from 'lucide-react';
+import Leaderboard from './components/Leaderboard';
+import { Trophy, Globe, User, ExternalLink, Settings, Flame, Zap, History, ChevronLeft, BarChart3 } from 'lucide-react';
 
 function App() {
   const [handle, setHandle] = useState('');
   const [inputHandle, setInputHandle] = useState('');
   const [activeTab, setActiveTab] = useState('global');
   const [selectedDate, setSelectedDate] = useState(new Date()); // New state for date selection
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Pass selectedDate to hook (it will default to today if null, but we manage state here)
   const { globalPotd, personalPotd, loading, error, streak, maxStreak, solvedToday, globalSolved, solvedHistory } = usePotd(handle, selectedDate);
@@ -53,9 +55,9 @@ function App() {
         <div className="flex justify-between items-center mb-1 pt-2">
           <h3 className="text-base font-bold text-white truncate max-w-[200px]">{problem.name}</h3>
           <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${problem.rating < 1200 ? 'bg-green-900/50 text-green-300 border border-green-800' :
-              problem.rating < 1600 ? 'bg-blue-900/50 text-blue-300 border border-blue-800' :
-                problem.rating < 2000 ? 'bg-purple-900/50 text-purple-300 border border-purple-800' :
-                  'bg-red-900/50 text-red-300 border border-red-800'
+            problem.rating < 1600 ? 'bg-blue-900/50 text-blue-300 border border-blue-800' :
+              problem.rating < 2000 ? 'bg-purple-900/50 text-purple-300 border border-purple-800' :
+                'bg-red-900/50 text-red-300 border border-red-800'
             }`}>
             {problem.rating || 'Unrated'}
           </span>
@@ -77,6 +79,14 @@ function App() {
 
   return (
     <div className="w-[350px] bg-slate-900 text-white font-sans flex flex-col h-auto min-h-0 transition-height duration-300">
+
+      {/* Leaderboard Modal */}
+      <Leaderboard
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        currentHandle={handle}
+      />
+
       {/* Header */}
       <header className="flex justify-between items-center px-4 py-3 bg-slate-800/30 border-b border-slate-700/30">
         <div className="flex items-center gap-2">
@@ -95,9 +105,19 @@ function App() {
             )}
           </h1>
         </div>
-        <button className="text-slate-500 hover:text-white transition-colors">
-          <Settings size={16} />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Leaderboard Button */}
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            className="p-1.5 hover:bg-slate-800 rounded-md transition-all text-slate-400 hover:text-yellow-400"
+            title="Leaderboard"
+          >
+            <BarChart3 size={16} />
+          </button>
+          <button className="p-1.5 hover:bg-slate-800 rounded-md transition-all text-slate-400 hover:text-white">
+            <Settings size={16} />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -135,8 +155,8 @@ function App() {
               <button
                 onClick={() => setActiveTab('global')}
                 className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === 'global'
-                    ? 'bg-slate-700 shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-700/30'
+                  ? 'bg-slate-700 shadow-sm'
+                  : 'text-slate-400 hover:bg-slate-700/30'
                   } ${globalSolved
                     ? 'text-green-400'
                     : (activeTab === 'global' ? 'text-white' : '')
@@ -148,8 +168,8 @@ function App() {
               <button
                 onClick={() => setActiveTab('personal')}
                 className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${activeTab === 'personal'
-                    ? 'bg-purple-600 shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-700/30'
+                  ? 'bg-purple-600 shadow-sm'
+                  : 'text-slate-400 hover:bg-slate-700/30'
                   } ${solvedToday && isToday // Only show strict green tick for "TODAY's" goal being done? Or if past is solved? 
                     // If globalSolved/solvedToday reflects the loaded problem (which is past date), then it's correct.
                     // YES, usePotd checkStats updates based on loaded problem.

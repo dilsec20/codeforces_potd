@@ -298,6 +298,22 @@ export const usePotd = (handle, forceDate = null) => {
             setStreak(currentStreak);
             setMaxStreak(currentMax);
             setSolvedHistory(history);
+
+            // Sync with Supabase Leaderboard
+            import('../supabaseClient').then(({ supabase }) => {
+                if (supabase && handle) {
+                    supabase
+                        .from('leaderboard')
+                        .upsert({
+                            handle: handle,
+                            max_streak: currentMax,
+                            last_updated: new Date().toISOString()
+                        })
+                        .then(({ error }) => {
+                            if (error) console.error("Supabase sync error:", error);
+                        });
+                }
+            });
         });
     };
 
