@@ -23,15 +23,10 @@ A Chrome extension that enhances your Codeforces daily practice with personalize
   - Solve today -> Streak + 1.
   - Miss a day -> Streak resets to 0.
 
-### 4. 📅 Calendar & History
-- Visualizes your monthly progress.
-- Dates with a solved "For You" problem are marked with a **Green Checkmark**.
-- **Time Travel**: Click on any past date in the calendar to load and solve that day's specific "For You" problem!
-
-### 5. 🎨 Enhanced UI
-- **Dark Mode**: sleek Slate-900 theme.
-- **Compact Layout**: Designed to fit perfectly in the extension popup without scrolling.
-- **Dynamic Indicators**: Tabs turn **Green** with a checkmark when you solve the daily problem.
+### 6. 🏆 Global Leaderboard
+- Compete with other users!
+- Displays the **Top 10** users by Max Streak.
+- Automatically syncs your max streak to the global database.
 
 ## Installation 🛠️
 
@@ -44,6 +39,33 @@ A Chrome extension that enhances your Codeforces daily practice with personalize
    cd codeforces_potd
    npm install
    ```
+3. **Configure Supabase (Leaderboard)**:
+   - Create a project on [Supabase](https://supabase.com).
+   - Run the SQL to create the `leaderboard` table (see below).
+   - Open `src/supabaseClient.js` and paste your **Supabase URL** and **Anon Key**.
+   
+4. **Build the extension**:
+   ```bash
+   npm run build
+   ```
+   
+## Database Setup (Optional) 🗄️
+
+To enable the leaderboard, run this SQL in your Supabase SQL Editor:
+
+```sql
+create table leaderboard (
+  handle text primary key,
+  max_streak int default 0,
+  last_updated timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter table leaderboard enable row level security;
+
+create policy "Public read access" on leaderboard for select using (true);
+create policy "Public insert access" on leaderboard for insert with check (true);
+create policy "Public update access" on leaderboard for update using (true);
+```
 3. **Build the extension**:
    ```bash
    npm run build
