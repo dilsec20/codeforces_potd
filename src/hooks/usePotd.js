@@ -210,6 +210,64 @@ export const usePotd = (handle, forceDate = null) => {
         return () => { isMounted = false; };
     }, [handle, targetDateStr]); // Depend on targetDateStr
 
+    // Streak Recovery Logic
+    useEffect(() => {
+        if (handle && streak === 0) {
+            import('../supabaseClient').then(({ supabase }) => {
+                if (!supabase) return;
+
+                supabase
+                    .from('leaderboard')
+                    .select('current_streak, last_updated, max_streak')
+                    .eq('handle', handle)
+                    .single()
+                    .then(({ data, error }) => {
+                        if (data && !error) {
+                            const lastDate = new Date(data.last_updated);
+                            const today = new Date();
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+
+                            // Check if last update was Today or Yesterday (so streak is still valid)
+                            const isToday = lastDate.toDateString() === today.toDateString();
+                            const isYesterday = lastDate.toDateString() === yesterday.toDateString();
+
+                            if ((isToday || isYesterday) && data.current_streak > 0) {
+                                console.log("Restoring streak from Supabase...", data.current_streak);
+
+                                const lastSolvedStr = `${lastDate.getFullYear()}${lastDate.getMonth() + 1}${lastDate.getDate()}`;
+
+                                chrome.storage.local.get(['streakData'], (result) => {
+                                    const currentData = result.streakData || { history: [] };
+                                    const newHistory = currentData.history || [];
+                                    if (!newHistory.includes(lastSolvedStr)) {
+                                        newHistory.push(lastSolvedStr);
+                                    }
+
+                                    const restoredData = {
+                                        count: data.current_streak,
+                                        max: Math.max(data.max_streak, data.current_streak),
+                                        lastSolved: lastSolvedStr,
+                                        history: newHistory
+                                    };
+
+                                    chrome.storage.local.set({ streakData: restoredData });
+                                    setStreak(restoredData.count);
+                                    setMaxStreak(restoredData.max);
+                                    setSolvedHistory(restoredData.history);
+
+                                    if (lastSolvedStr === getDailyDateString()) {
+                                        setSolvedToday(true);
+                                    }
+                                });
+                            }
+                        }
+                    });
+            });
+        }
+    }, [handle, streak]);
+
+
     const checkStatus = async (userHandle, globalProb, personalProb) => {
         if (!userHandle) return;
 

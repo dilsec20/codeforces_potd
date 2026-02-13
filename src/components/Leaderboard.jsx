@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Trophy, X, Loader2 } from 'lucide-react';
 
+const getRatingColor = (rating) => {
+    if (!rating) return "text-white"; // Default/Unrated
+    if (rating < 1200) return "text-gray-400"; // Newbie
+    if (rating < 1400) return "text-green-500"; // Pupil
+    if (rating < 1600) return "text-cyan-400"; // Specialist
+    if (rating < 1900) return "text-blue-500"; // Expert
+    if (rating < 2100) return "text-violet-400"; // Candidate Master
+    if (rating < 2300) return "text-orange-400"; // Master
+    if (rating < 2400) return "text-orange-500"; // International Master
+    if (rating < 2600) return "text-red-500"; // Grandmaster
+    if (rating < 3000) return "text-red-600"; // International Grandmaster
+    return "text-red-700"; // Legendary Grandmaster
+};
+
 const Leaderboard = ({ isOpen, onClose, currentHandle }) => {
     const [leaders, setLeaders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -22,21 +36,63 @@ const Leaderboard = ({ isOpen, onClose, currentHandle }) => {
         setLoading(true);
         setError(null);
         try {
-            const { data, error } = await supabase
+            // 1. Fetch Top 10 from Supabase (Users MUST have 'current_streak' column)
+            const { data: dbData, error: dbError } = await supabase
                 .from('leaderboard')
-                .select('handle, max_streak')
-                .order('max_streak', { ascending: false })
+                .select('handle, current_streak')
+                .order('current_streak', { ascending: false })
                 .limit(10);
 
-            if (error) throw error;
-            setLeaders(data || []);
+            if (dbError) throw dbError;
+            if (!dbData || dbData.length === 0) {
+                setLeaders([]);
+                return;
+            }
+
+            // 2. Fetch Ratings from Codeforces
+            const handles = dbData.map(u => u.handle).join(';');
+            try {
+                const cfResponse = await fetch(`https://codeforces.com/api/user.info?handles=${handles}`);
+                const cfData = await cfResponse.json();
+
+                if (cfData.status === "OK") {
+                    // Create a map of handle -> rating
+                    const ratingMap = {};
+                    cfData.result.forEach(user => {
+                        ratingMap[user.handle] = user.rating;
+                    });
+
+                    // Merge rating into leader data
+                    const mergedData = dbData.map(user => ({
+                        ...user,
+                        rating: ratingMap[user.handle] || 0
+                    }));
+                    setLeaders(mergedData);
+                } else {
+                    // Fallback if CF API fails
+                    setLeaders(dbData);
+                }
+            } catch (cfErr) {
+                console.warn("Failed to fetch CF ratings:", cfErr);
+                setLeaders(dbData);
+            }
+
         } catch (err) {
             console.error("Error fetching leaderboard:", err);
-            setError("Could not load leaderboard.");
+
+            // Extract the actual error message
+            const errorMessage = err.message || err.error_description || JSON.stringify(err);
+
+            if (errorMessage.includes("current_streak") || errorMessage.includes("42703")) {
+                setError("Missing column 'current_streak'. Please run the SQL command.");
+            } else {
+                setError(`Error: ${errorMessage}`);
+            }
         } finally {
             setLoading(false);
         }
     };
+
 
     if (!isOpen) return null;
 
@@ -72,6 +128,11 @@ const Leaderboard = ({ isOpen, onClose, currentHandle }) => {
                                     Missing API Key in supabaseClient.js
                                 </p>
                             )}
+                            {error.includes("Missing 'current_streak'") && (
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Run SQL: `alter table leaderboard add column current_streak int default 0;`
+                                </p>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-1">
@@ -100,14 +161,14 @@ const Leaderboard = ({ isOpen, onClose, currentHandle }) => {
                                                     {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
                                                 </span>
                                                 <div className="flex flex-col">
-                                                    <span className={`font-medium ${isMe ? 'text-blue-400' : 'text-slate-200'}`}>
+                                                    <span className={`font-medium ${getRatingColor(player.rating)} font-bold`}>
                                                         {player.handle}
                                                     </span>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-lg font-bold text-white tabular-nums">
-                                                    {player.max_streak}
+                                                    {player.current_streak}
                                                 </span>
                                                 <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">
                                                     Days
