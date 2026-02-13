@@ -365,6 +365,7 @@ export const usePotd = (handle, forceDate = null) => {
                         .upsert({
                             handle: handle,
                             max_streak: currentMax,
+                            current_streak: currentStreak,
                             last_updated: new Date().toISOString()
                         })
                         .then(({ error }) => {
