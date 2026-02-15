@@ -1,0 +1,119 @@
+[Skip to main content](https://chromewebstore.google.com/detail/codeforces-potd/kdpcekneldcnkajbmabmfgdpcdjdmcfd?hl=en-GB&utm_source=ext_sidebar)
+[Chrome Web Store](https://chromewebstore.google.com/detail/codeforces-potd/)
+- [My extensions and themes](https://chromewebstore.google.com/user/installed)
+- [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+- Give feedback
+[My extensions and themes](https://chromewebstore.google.com/user/installed)
+[Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+[Sign in](https://accounts.google.com/ServiceLogin?passive=1209600&osid=1&continue=https://chromewebstore.google.com/detail/codeforces-potd/kdpcekneldcnkajbmabmfgdpcdjdmcfd?hl%3Den-GB%26utm_source%3Dext_sidebar&followup=https://chromewebstore.google.com/detail/codeforces-potd/kdpcekneldcnkajbmabmfgdpcdjdmcfd?hl%3Den-GB%26utm_source%3Dext_sidebar&hl=en-GB&ec=GAZApQM)
+
+# Codeforces POTD
+
+[Learn more.](https://support.google.com/chrome_webstore/?hl=en-GB&p=cws_badges)
+[32 ratings](https://chromewebstore.google.com/detail/codeforces-potd/detail/codeforces-potd/kdpcekneldcnkajbmabmfgdpcdjdmcfd/reviews)
+32 ratings
+[Extension](https://chromewebstore.google.com/detail/codeforces-potd/category/extensions)
+[Workflow and planning](https://chromewebstore.google.com/detail/codeforces-potd/category/extensions/productivity/workflow)
+
+## Overview
+This Extension Gives you a New CF problem to solve each day according to your rating and challenges you. Got what it takes?
+Elevate your coding journey with Codeforces POTD, a powerful Chrome extension designed to transform your competitive programming practice through consistent, personalized challenges. What's New in Version 2.0: - 🔥 Streak System: Build and maintain your solving momentum with our new streak tracking feature. - ☁️ Cloud Synchronization: Your progress now syncs seamlessly across all your devices. - 🔄 Reliable Backend: Enhanced database integration ensures problem delivery is consistent and dependable. - ✅ Automatic Verification: The extension now automatically detects when you've solved the daily problem. Why Codeforces POTD? Are you struggling to find the right problems on Codeforces? Feel like you've hit a plateau in your programming skills? Preparing for technical interviews or placement exams? Codeforces POTD solves these challenges by delivering a perfectly calibrated daily problem that matches your current skill level, helping you grow consistently without the overwhelm of choosing from thousands of problems. Key Features Personalized Daily Problems: Get problems matched precisely to your Codeforces rating, ensuring the perfect balance of challenge and achievability Interactive Calendar: Track your progress with our sleek calendar that integrates directly into the Codeforces website Motivation Through Streaks: Stay motivated by building and maintaining your daily solving streak Effortless Setup: Simply enter your Codeforces handle, and the extension takes care of the rest Progress Synchronization: Your solving history and streaks are securely stored and synchronized across devices Perfect For: - Competitive programmers looking for structured practice - Students preparing for technical interviews - Coders wanting to improve their problem-solving skills consistently - Anyone who wants to make daily coding practice a habit Codeforces POTD is your companion in overcoming coding roadblocks and advancing your programming skills. Whether you're just starting out or preparing for your next career move, this extension will help you develop the consistent practice that leads to mastery. Start your daily problem-solving journey today. Happy coding!
+
+## 4.6 out of 532 ratings[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results)
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results)
+
+## Details
+- Version2.0.0
+- Updated19 March 2025
+- [Flag concern](https://chromewebstore.google.com/detail/codeforces-potd/detail/kdpcekneldcnkajbmabmfgdpcdjdmcfd/report)
+- Offered byAnant Kumar
+- Size47.79KiB
+- LanguagesEnglish
+- Developer Email chestermikes@gmail.com
+- Non-traderThis developer has not identified itself as a trader. For consumers in the European Union, please note that consumer rights do not apply to contracts between you and this developer.
+[Flag concern](https://chromewebstore.google.com/detail/codeforces-potd/detail/kdpcekneldcnkajbmabmfgdpcdjdmcfd/report)
+
+## Privacy
+Codeforces POTD has disclosed the following information regarding the collection and usage of your data. More detailed information can be found in the developer's [privacy policy](https://docs.google.com/document/d/1dKPZz0ShjpsCwoReT-lxmEXQ-lS8zOWfPQMmcLcFn6g/edit?usp=sharing).
+
+## This developer declares that your data is
+- Not being sold to third parties, outside of the [approved use cases](https://developer.chrome.com/docs/webstore/program-policies/limited-use/)
+- Not being used or transferred for purposes that are unrelated to the item's core functionality
+- Not being used or transferred to determine creditworthiness or for lending purposes
+[approved use cases](https://developer.chrome.com/docs/webstore/program-policies/limited-use/)
+
+## Related
+
+CF-Daily
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Codeforces extension to display a daily question for each user in each rating group
+Codeforces Customizer
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+customize and extend codeforces
+Carrot
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Rating predictor for Codeforces
+Codeforces Helper
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Enhance Codeforces with an easy contest participant checker and user submission rating viewer.
+CF Analytics
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Analyse Codeforces profiles
+CF-Predictor
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+This extension predicts rating changes for Codeforces. It shows approximate deltas during and after the contest.
+CFStreak
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+A chrome extension to track your codeforces streak and provide you daily with random problems to solve.
+Competitive Companion
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Parses competitive programming problems and sends them to various tools like CP Editor and CPH.
+Codeforces Solutions
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+A chrome extension to get all submitted solutions of a particular problem. How it works? Download this extension. Then browse any…
+Codeforces Rating-Based Heatmap
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Displays a rating-based problem-solving heatmap on Codeforces profile pages.
+CF Tracker
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Find time invested in a particular problem during a contest or otherwise.
+Codeforces Notes
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Take notes on Codeforces questions
+CF-Daily
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Codeforces extension to display a daily question for each user in each rating group
+Codeforces Customizer
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+customize and extend codeforces
+Carrot
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Rating predictor for Codeforces
+Codeforces Helper
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Enhance Codeforces with an easy contest participant checker and user submission rating viewer.
+CF Analytics
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Analyse Codeforces profiles
+CF-Predictor
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+This extension predicts rating changes for Codeforces. It shows approximate deltas during and after the contest.
+CFStreak
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+A chrome extension to track your codeforces streak and provide you daily with random problems to solve.
+Competitive Companion
+[Learn more about results and reviews.](https://support.google.com/chrome_webstore/answer/12225786?p=cws_reviews_results&hl=en-GB)
+Parses competitive programming problems and sends them to various tools like CP Editor and CPH.
+
+## Related
+
+- [About Chrome Web Store](https://support.google.com/chrome_webstore/answer/1047776?hl=en-GB)
+- [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+- [Privacy Policy](https://myaccount.google.com/privacypolicy?hl=en-GB)
+- [Terms of Service](https://ssl.gstatic.com/chrome/webstore/intl/en-GB/gallery_tos.html)
+- [Help](https://support.google.com/chrome_webstore?hl=en-GB)
+[About Chrome Web Store](https://support.google.com/chrome_webstore/answer/1047776?hl=en-GB)
+[Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+[Privacy Policy](https://myaccount.google.com/privacypolicy?hl=en-GB)
+[Terms of Service](https://ssl.gstatic.com/chrome/webstore/intl/en-GB/gallery_tos.html)
+[Help](https://support.google.com/chrome_webstore?hl=en-GB)

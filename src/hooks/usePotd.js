@@ -65,7 +65,13 @@ export const usePotd = (handle, forceDate = null) => {
                 d.setDate(d.getDate() - 1);
                 const yesterday = `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
                 if (lastSolved && lastSolved !== today && lastSolved !== yesterday) {
-                    // Only update visual streak if looking at today, or generally just load it
+                    // Streak is broken!
+                    if (count > 0) {
+                        count = 0;
+                        chrome.storage.local.set({
+                            streakData: { ...result.streakData, count: 0 }
+                        });
+                    }
                 }
             }
         });
